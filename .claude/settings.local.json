@@ -1,7 +1,38 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch",
+      "WebFetch(domain:techcrunch.com)",
+      "WebFetch(domain:www.theverge.com)",
+      "WebFetch(domain:news.ycombinator.com)",
+      "WebFetch(domain:www.reuters.com)",
+      "WebFetch(domain:www.cnbc.com)",
+      "WebFetch(domain:arstechnica.com)",
+      "WebFetch(domain:www.engadget.com)",
+      "WebFetch(domain:9to5google.com)",
+      "WebFetch(domain:www.tomshardware.com)",
+      "Bash(echo \"exit:$?\")",
+      "WebFetch(domain:www.bleepingcomputer.com)",
+      "WebFetch(domain:hn.algolia.com)",
+      "WebFetch(domain:www.techradar.com)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:decipher.sc)",
+      "WebFetch(domain:context.ai)",
+      "WebFetch(domain:www.counterpointresearch.com)",
+      "WebFetch(domain:www.pcmag.com)",
+      "WebFetch(domain:warontherocks.com)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:techmeme.com)",
+      "WebFetch(domain:www.apple.com)",
+      "WebFetch(domain:9to5mac.com)",
+      "WebFetch(domain:stratechery.com)"
     ]
   }
 }

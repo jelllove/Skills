@@ -44,14 +44,44 @@ When user asks for daily news and article generation, follow this workflow by de
 
      3. 不要写到和政治相关的，也不要写到和中国国家领导人相关的话题，主要聚焦这个新闻本身。
 
-     4. 然后我想要图文都有，然后图片的话尽量拿免费的，没有版权的，图片尽量要多，至少3张，但也不要超过5张，然后图片要和文章有强相关，不要随便找一个，最好和标题上的公司，人，工具，事件有相关性。然后图片可以找不是免费的，最好是从公司官网或者是新闻报道里直接拿的，如果实在找不到，再去免费的图片库里找，最后实在找不到了，就放一个相关的图标也行。总之图片要和文章内容有强相关性，不要随便找一个。 
-     图片最好不要使用.SVG, .WEB之样的格式，因为有些平台不太支持这种格式，最好使用.jpg或者.png的格式。
-     
-     4. 如果能找到有动态的图像，或是者是视频的截图，或者是一些动态图表的截图，那就更好了，这样可以让文章更生动一些，更有吸引力一些。
+     4. 图文都有。图片来源**不再限制**（无需"必须免费"或"必须中国可访问"），可以来自公司官网 / Newsroom / Press kit、主流新闻媒体的实拍、Wikimedia Commons、Unsplash / Pexels 等。只要能下载到并且**和文章主题强相关**即可：标题中出现的公司、人物、产品、事件就应当是配图主体，不要放泛泛的"科技感"图。
+        - 每篇 3 – 5 张，文件格式优先 `.jpg` / `.png`，避免 `.svg` / `.webp`（公众号兼容性差）。
+        - 优先级（高 → 低）：公司官方 Newsroom > 主流新闻媒体实拍 > Wikimedia Commons > Unsplash/Pexels > 公司或产品 Logo（最后兜底）。
+        - 如果能找到官方视频截图、动态图表截图，比静态头像更生动。
 
-     4. 如果能直接找到一个视频的话，那就更好了，这样可以让文章更生动一些，更有吸引力一些。视频的话，最好是从公司的官网或者是新闻报道里直接拿的。
+     4-bis. **图片处理与托管流程（重要 - 新流程）**
 
-     5. 图片的话，尽量找一些在中国也能访问的图片资源。比如一些google.com的，或者是一些国外的图片库的图片，可能在中国访问不了，所以要注意一下，尽量找一些在中国也能访问的图片资源。
+        所有图片都先存本地，再统一上传到 Azure Storage，最终发布版 Markdown 用公网 URL，不用本地相对路径。
+        
+        Step 1 - 下载到本地 `assets/wechat-<YYYYMMDD>/`，文件名语义化（如 `tim-cook.jpg`、`apple-park.jpg`），下载时带真实浏览器 User-Agent。Markdown 草稿里先用本地相对路径：`![alt](assets/wechat-20260514/xxx.jpg)`。
+        
+        Step 2 - 看图核对，确认主体清晰、和文章主题相关、无水印 / 错图。不合适重新换源下载。
+        
+        Step 3 - 调用 `upload-to-azure.ps1`（位于用户级 skill 目录 `c:\Users\<user>\.agents\skills\daily-news\` 与本仓库镜像 `.claude/skills/daily-news/`，两份内容一致）：
+          - 扫描 Markdown 里所有 `assets/...` 引用
+          - 上传到 Azure Blob Storage
+          - 把本地路径替换成公网 URL
+          - 默认输出 `<原文件名>.cloud.md`；加 `-InPlace` 可原地改写
+        
+        鉴权环境变量（在仓库根 `.env` 中维护即可）：
+          - `DAILY_NEWS_STORAGE_ACCOUNT`（必填）
+          - `DAILY_NEWS_STORAGE_CONTAINER`（默认 `wechat-assets`；如果用 Static Website 则填 `$web`）
+          - `DAILY_NEWS_STORAGE_KEY` 或 `AZURE_STORAGE_CONNECTION_STRING`（二选一即可，**无需 `az login`**）
+          - `DAILY_NEWS_WEB_ENDPOINT`（当容器为 `$web` 时填，格式 `https://<account>.zNN.web.core.windows.net`，脚本会用它生成 Static Website URL）
+        
+        Step 4 - 发布时使用 `*.cloud.md`，本地 `assets/wechat-<YYYYMMDD>/` 保留作为底图存档。
+        
+        典型调用：
+        ```powershell
+        # 一次性加载 .env
+        Get-Content .\.env | ForEach-Object {
+          $line=$_.Trim(); if([string]::IsNullOrWhiteSpace($line) -or $line.StartsWith('#')){ return }
+          $kv=$line -split '=',2; if($kv.Count -eq 2){ [Environment]::SetEnvironmentVariable($kv[0].Trim(), $kv[1].Trim(), 'Process') }
+        }
+        # 上传并生成 .cloud.md
+        & "$HOME\.agents\skills\daily-news\upload-to-azure.ps1" -MarkdownFile .\Copilot_YYYYMMDD_WeChat_<slug>.md
+        ```
+
     6. 文章最后写上文章中所有出现的相关的数据和信息的来源，要求有URL链接的那种，方便我后续去核实和查阅。比如说这个新闻的来源是哪里，这个数据的来源是哪里，这个分析的依据是什么，这些都要写清楚，最好是有URL链接的那种，方便我后续去核实和查阅。
     7. 文件最后写个一个申明，说明这个文章仅供参考，不构成任何投资建议或者其他方面的建议，文章中的观点仅代表作者个人的观点，不代表任何公司的观点，也不代表任何机构的观点，投资有风险，入市需谨慎等等类似的申明，主要是为了规避一些法律风险，保护自己和公司的安全。
     8. 然后文章的最后要写一个相关的关键词，方便我后续做标签和分类用。比如 #XXX, #XXX, #XXX, 这样的标签，标签的话尽量要和文章内容相关的，不要随便写一些标签上去。
